@@ -23,7 +23,12 @@ export interface ChatMessage {
   tokens_used?: number | null;
   latency_ms?: number | null;
   isStreaming?: boolean;
+  timestamp?: string;
+  citations?: SourceCitation[];
 }
+
+export type Message = ChatMessage;
+export type Citation = SourceCitation;
 
 export interface SourceCitation {
   document_id: string;
@@ -51,6 +56,8 @@ export interface Document {
   language: string;
   created_at: string;
 }
+
+export type DocumentMeta = Document;
 
 export interface ModelInfo {
   name: string;
