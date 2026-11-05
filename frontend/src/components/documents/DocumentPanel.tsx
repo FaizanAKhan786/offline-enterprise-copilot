@@ -148,10 +148,10 @@ export function DocumentPanel({ onClose }: DocumentPanelProps) {
                   <span className="text-[10px] text-text-muted">
                     {doc.chunk_count} chunks
                   </span>
-                  {doc.status === "processed" && (
+                  {doc.status === "ready" && (
                     <CheckCircle className="w-2.5 h-2.5 text-green-400" />
                   )}
-                  {doc.status === "failed" && (
+                  {doc.status === "error" && (
                     <AlertCircle className="w-2.5 h-2.5 text-red-400" />
                   )}
                 </div>
