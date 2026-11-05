@@ -292,14 +292,14 @@ function MessageBubble({
                 className="inline-flex items-center gap-1 text-[10px] text-text-muted bg-surface-overlay px-2 py-0.5 rounded-full"
               >
                 <FileText className="w-2.5 h-2.5" />
-                {c.source}
+                {c.filename}
               </span>
             ))}
           </div>
         )}
 
         {/* Confidence */}
-        {message.confidence !== undefined && (
+        {message.confidence != null && (
           <div className="flex items-center gap-1.5 mt-1.5">
             {message.confidence < 0.5 ? (
               <AlertTriangle className="w-3 h-3 text-yellow-500" />
@@ -316,7 +316,7 @@ function MessageBubble({
         {!isUser && message.content && !isStreaming && (
           <div className="flex items-center gap-1 mt-1.5">
             <button
-              onClick={() => onCopy(message.id, message.content)}
+              onClick={() => onCopy(message.id || "", message.content)}
               className="p-1 rounded text-text-muted hover:text-text-secondary transition-colors"
             >
               {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
