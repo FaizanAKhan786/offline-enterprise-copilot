@@ -1,255 +1,91 @@
-<p align="center">
-  <img src="docs/architecture/logo.svg" alt="OECA Logo" width="120" />
-</p>
+<div align="center">
 
-<h1 align="center">Offline Enterprise AI Copilot</h1>
+# Offline Enterprise AI Copilot
+### Private-first LLM and retrieval platform
 
-<p align="center">
-  <strong>A fully air-gapped, production-grade AI assistant platform with zero external API dependencies.</strong>
-</p>
+**Local models · Hybrid RAG · Agents · FastAPI · Next.js · MLOps**
 
-<p align="center">
-  <a href="#features">Features</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#deployment">Deployment</a> •
-  <a href="#api-reference">API Reference</a> •
-  <a href="#contributing">Contributing</a>
-</p>
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-15-18181B?logo=nextdotjs&logoColor=white)
+![Deployment](https://img.shields.io/badge/Deployment-Self--hosted-0D9488)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/python-3.11+-blue?logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/next.js-15-black?logo=next.js" />
-  <img src="https://img.shields.io/badge/fastapi-0.115+-009688?logo=fastapi" />
-  <img src="https://img.shields.io/badge/license-MIT-green" />
-  <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker" />
-  <img src="https://img.shields.io/badge/k8s-ready-326CE5?logo=kubernetes" />
-  <img src="https://img.shields.io/badge/offline-100%25-orange" />
-</p>
+[Quick start](#quick-start) · [Architecture](#architecture) · [Security](#security-and-operational-notes) · [Source](https://github.com/FaizanAKhan786/offline-enterprise-copilot)
 
----
+</div>
 
-## Why This Exists
+## Overview
 
-Enterprise environments — defense, healthcare, finance, government — often operate in **air-gapped networks** where cloud AI APIs are not an option. This platform delivers the full power of modern AI assistants using only local, open-source models and infrastructure.
+An **offline-oriented enterprise AI copilot codebase** for teams that want control over models, documents and inference. It combines a Next.js interface with FastAPI services, RAG, local-model adapters and an operational stack. It is a repository implementation, **not** evidence of a security-certified or independently audited production deployment.
 
-No data leaves your network. Ever.
-
----
-
-## Features
-
-### Core AI Capabilities
-
-| Capability | Implementation | Details |
-|---|---|---|
-| **Local LLM Inference** | Ollama / vLLM | Llama 3, Mistral, Qwen with dynamic switching, GGUF quantization, GPU+CPU |
-| **Enterprise RAG** | Qdrant + BM25 | Hybrid dense/sparse retrieval, reranking, citation-aware responses |
-| **Agentic Workflows** | LangGraph | Research, Summarization, Verification, Translation, Reporting agents |
-| **Document Processing** | Tesseract + PyMuPDF | PDF, DOCX, TXT, images with OCR extraction |
-| **Voice AI** | Whisper | Speech-to-text, real-time microphone input |
-| **Multilingual** | MarianMT | English, Arabic, Hindi — translation + multilingual retrieval |
-
-### Enterprise Features
-
-- **JWT Authentication** with role-based access control (Admin, Analyst, Viewer)
-- **Audit logging** — every query, document access, and agent action is traced
-- **Semantic caching** via Redis — avoid redundant inference
-- **Session memory** — persistent conversation history per user
-- **Rate limiting** — configurable per-role API throttling
-- **Secure document storage** — encrypted at rest with access controls
-- **WebSocket streaming** — real-time token-by-token responses
-- **Async task queue** — background document processing with Celery/Redis
-
-### Observability
-
-- Prometheus metrics (latency, throughput, model utilization, queue depth)
-- Grafana dashboards (pre-configured JSON provisioning)
-- MLflow experiment tracking (model benchmarks, RAG evaluation)
-- Structured JSON logging with correlation IDs
-- Health check endpoints with dependency status
-
----
+| Area | Implementation |
+| --- | --- |
+| Interface | Next.js, chat and document workflows |
+| API | FastAPI with auth, document, chat, agent and model routes |
+| RAG | Qdrant, embeddings and sparse/dense retrieval design |
+| AI runtimes | Local Ollama / configurable model stack |
+| Persistence | PostgreSQL and Redis |
+| Telemetry | Prometheus, Grafana and application logging |
+| Infrastructure | Docker Compose and Kubernetes manifests |
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        NGINX GATEWAY                        │
-│                    (TLS · Rate Limiting)                     │
-├────────────────────────┬────────────────────────────────────┤
-│                        │                                    │
-│   ┌────────────────┐   │   ┌──────────────────────────┐     │
-│   │  Next.js 15    │   │   │     FastAPI Backend       │     │
-│   │  Frontend      │◄──┼──►│                          │     │
-│   │                │   │   │  ┌─────────┐ ┌────────┐  │     │
-│   │  • Chat UI     │   │   │  │ Auth    │ │ RAG    │  │     │
-│   │  • Doc Upload  │   │   │  │ Service │ │ Engine │  │     │
-│   │  • Workflows   │   │   │  └─────────┘ └────────┘  │     │
-│   │  • Analytics   │   │   │  ┌─────────┐ ┌────────┐  │     │
-│   └────────────────┘   │   │  │ Agent   │ │ Voice  │  │     │
-│                        │   │  │ Engine  │ │ Engine │  │     │
-│                        │   │  └─────────┘ └────────┘  │     │
-│                        │   └──────────┬───────────────┘     │
-│                        │              │                     │
-│   ┌────────────────────┼──────────────┼──────────────────┐  │
-│   │              Infrastructure Layer                    │  │
-│   │  ┌──────┐  ┌──────┐  ┌───────┐  ┌────────────────┐  │  │
-│   │  │Qdrant│  │Postgres│ │ Redis │  │ Ollama / vLLM  │  │  │
-│   │  └──────┘  └──────┘  └───────┘  └────────────────┘  │  │
-│   └──────────────────────────────────────────────────────┘  │
-├─────────────────────────────────────────────────────────────┤
-│  Prometheus · Grafana · MLflow · Structured Logging         │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    U["Web browser"] --> N["Next.js frontend"]
+    N --> A["FastAPI /api/v1"]
+    A --> AUTH["Authentication + access controls"]
+    A --> DOC["Document ingestion + OCR"]
+    A --> AG["RAG / agent workflows"]
+    DOC --> Q["Qdrant vectors"]
+    AG --> Q
+    AG --> O["Ollama / local LLM"]
+    A --> P["PostgreSQL"]
+    A --> R["Redis / worker queue"]
+    A --> M["Prometheus + Grafana"]
 ```
 
----
+## Quick start
 
-## Quick Start
-
-### Prerequisites
-
-- Docker & Docker Compose v2
-- NVIDIA GPU (recommended) or CPU-only mode
-- 16GB+ RAM (32GB recommended)
-- 50GB+ disk space for models
-
-### 1. Clone & Configure
+**Requirements:** Docker + Compose v2, sufficient storage for model weights, and GPU resources if using the bundled GPU profile.
 
 ```bash
-git clone https://github.com/yourname/offline-enterprise-copilot.git
+git clone https://github.com/FaizanAKhan786/offline-enterprise-copilot.git
 cd offline-enterprise-copilot
 cp .env.example .env
-# Edit .env with your configuration
+# Edit .env: change default JWT/admin/database credentials
+docker compose -f infra/docker/docker-compose.yml --profile gpu up -d --build
+docker compose -f infra/docker/docker-compose.yml exec ollama ollama pull llama3:8b
 ```
 
-### 2. Launch with Docker Compose
+After the services initialize, inspect [the frontend](http://localhost:3000), [FastAPI docs](http://localhost:8000/docs) and [the API health endpoint](http://localhost:8000/api/v1/health). Use:
 
 ```bash
-# GPU mode (requires nvidia-docker)
-docker compose -f infra/docker/docker-compose.yml --profile gpu up -d
-
-# CPU-only mode
-docker compose -f infra/docker/docker-compose.yml --profile cpu up -d
+docker compose -f infra/docker/docker-compose.yml ps
+docker compose -f infra/docker/docker-compose.yml logs -f backend
 ```
 
-### 3. Pull Models
+**Configuration note:** the Compose file supplies a GPU reservation for the Ollama service; users without a suitable NVIDIA setup must adjust the model service configuration. The included setup script also needs environment-specific review before relying on it.
 
-```bash
-# Pull default models into Ollama
-docker exec ollama ollama pull llama3:8b
-docker exec ollama ollama pull mistral:7b
-docker exec ollama ollama pull nomic-embed-text
-```
+For source-first exploration, see [backend](backend/), [frontend](frontend/) and [infrastructure](infra/). The file [`.env.example`](.env.example) documents the major settings.
 
-### 4. Access
+## Security and operational notes
 
-| Service | URL |
-|---|---|
-| **Web UI** | `http://localhost:3000` |
-| **API** | `http://localhost:8000/docs` |
-| **Grafana** | `http://localhost:3001` |
-| **Prometheus** | `http://localhost:9090` |
-| **MLflow** | `http://localhost:5001` |
+- **Replace all example credentials**, especially `JWT_SECRET`, `DEFAULT_ADMIN_PASSWORD`, and database passwords.
+- Restrict exposed service ports, set up HTTPS, secure storage and disable demo defaults before any real deployment.
+- Offline behavior depends on the complete environment: downloaded weights, container images, telemetry endpoints and access policies.
+- Descriptions of local processing are **architectural goals**, not a guarantee that every dependency or operating environment has been audited for network access.
 
-Default credentials: `admin` / `changeme-in-production`
+## Development pointers
 
----
+| Area | Path |
+| --- | --- |
+| FastAPI application | [`backend/app/main.py`](backend/app/main.py) |
+| Dependency setup | [`backend/requirements.txt`](backend/requirements.txt) |
+| Next.js frontend | [`frontend/`](frontend/) |
+| Compose stack | [`infra/docker/docker-compose.yml`](infra/docker/docker-compose.yml) |
+| Kubernetes manifests | [`infra/k8s/`](infra/k8s/) |
+| Contributor notes | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 
-## Development Setup
+The README presents the repository's current architecture and setup paths. It does not claim a successful clean-room deployment or benchmark run.
 
-### Backend
-
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
----
-
-## API Reference
-
-Full OpenAPI documentation is available at `/docs` when the backend is running. Key endpoints:
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/v1/chat/completions` | Chat with streaming support |
-| `POST` | `/api/v1/documents/upload` | Upload documents for RAG |
-| `POST` | `/api/v1/agents/execute` | Execute agentic workflows |
-| `POST` | `/api/v1/voice/transcribe` | Speech-to-text |
-| `GET`  | `/api/v1/models` | List available models |
-| `POST` | `/api/v1/auth/login` | Authenticate |
-| `GET`  | `/api/v1/health` | System health check |
-
-See [docs/api/](docs/api/) for full documentation.
-
----
-
-## Deployment
-
-### Docker Compose (Recommended for Single Node)
-
-See [infra/docker/](infra/docker/) for production-ready compose files.
-
-### Kubernetes (Multi-Node / HA)
-
-```bash
-kubectl apply -k infra/k8s/
-```
-
-See [infra/k8s/](infra/k8s/) for Helm-compatible manifests.
-
----
-
-## Configuration
-
-All configuration is via environment variables. See [`.env.example`](.env.example) for the full list.
-
-Key variables:
-
-| Variable | Default | Description |
-|---|---|---|
-| `OLLAMA_BASE_URL` | `http://ollama:11434` | Ollama server URL |
-| `QDRANT_URL` | `http://qdrant:6333` | Qdrant vector DB URL |
-| `POSTGRES_DSN` | `postgresql+asyncpg://...` | PostgreSQL connection |
-| `REDIS_URL` | `redis://redis:6379/0` | Redis URL |
-| `JWT_SECRET` | (required) | JWT signing secret |
-| `DEFAULT_MODEL` | `llama3:8b` | Default inference model |
-| `EMBEDDING_MODEL` | `nomic-embed-text` | Embedding model |
-| `ENABLE_GPU` | `true` | Enable GPU inference |
-
----
-
-## Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feat/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feat/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
-
-<p align="center">
-  Built for environments where the cloud isn't an option.
-</p>
+[Issues](https://github.com/FaizanAKhan786/offline-enterprise-copilot/issues) · [GitHub profile](https://github.com/FaizanAKhan786)
