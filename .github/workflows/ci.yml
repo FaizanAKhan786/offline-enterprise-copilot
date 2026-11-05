@@ -1,0 +1,45 @@
+name: Source and configuration checks
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-source:
+    name: Python syntax and project structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile application source
+        run: python -m compileall -q backend/app
+      - name: Check required project assets
+        run: |
+          test -f infra/docker/docker-compose.yml
+          test -f backend/requirements.txt
+          test -f frontend/package.json
+          test -f .env.example
+
+  frontend-types:
+    name: TypeScript checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install frontend packages
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit
