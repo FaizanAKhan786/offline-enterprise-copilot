@@ -29,6 +29,7 @@ async function request<T>(
     throw new Error(body.detail || `API Error: ${res.status}`);
   }
 
+  if (res.status === 204) return undefined as T;
   return res.json();
 }
 
@@ -50,6 +51,7 @@ export const api = {
     use_rag?: boolean;
     document_ids?: string[];
     temperature?: number;
+    language?: string;
   }) {
     const token = getToken();
     const res = await fetch(`${API_V1}/chat/completions`, {
@@ -137,4 +139,34 @@ export const api = {
 
   // Health
   getHealth: () => request<any>("/health"),
+};
+
+/** Compatibility adapter used by the chat and document panels. */
+export const apiClient = {
+  async *chatStream(message: string, model: string, useRag: boolean, conversationId?: string, language = "en", _token?: string) {
+    for await (const chunk of api.sendMessage({
+      message,
+      model,
+      use_rag: useRag,
+      conversation_id: conversationId,
+      language,
+    })) {
+      if (chunk.done) {
+        if (chunk.sources?.length) yield { type: "citations" as const, citations: chunk.sources };
+        if (chunk.confidence != null) yield { type: "metadata" as const, confidence: chunk.confidence };
+      } else if (typeof chunk.delta === "string") {
+        yield { type: "token" as const, content: chunk.delta };
+      }
+    }
+  },
+  async transcribe(blob: Blob, _language?: string, _token?: string): Promise<string> {
+    const result = await api.transcribe(blob);
+    return result.text;
+  },
+  uploadDocument(file: File, _token?: string) {
+    return api.uploadDocument(file);
+  },
+  deleteDocument(id: string, _token?: string) {
+    return api.deleteDocument(id);
+  },
 };
