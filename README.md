@@ -1,4 +1,7 @@
 <div align="center">
+  <a href="https://github.com/FaizanAKhan786/offline-enterprise-copilot"><img src="docs/project-showcase.svg" alt="offline-enterprise-copilot conceptual AI system architecture artwork" width="100%" /></a>
+  <br />
+
 
 # Offline Enterprise AI Copilot
 ### Private-first LLM and retrieval platform
